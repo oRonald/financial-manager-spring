@@ -9,4 +9,4 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://${MONGO_FINANCIAL_MANAGER_USER}:@{MONGO_FINANCIAL_MANAGER_PASS}@localhost:27017/financial-manager
+      uri: mongodb://${MONGO_FINANCIAL_MANAGER_USER}:${MONGO_FINANCIAL_MANAGER_PASS}@localhost:27017/financial-manager
