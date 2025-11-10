@@ -2,7 +2,7 @@ package br.com.financial.manager.app.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
@@ -12,7 +12,8 @@ import java.util.Set;
 @Table(name = "roles")
 
 @NoArgsConstructor
-@Data
+@AllArgsConstructor
+@Getter
 public class Role {
 
     @Id
@@ -23,11 +24,5 @@ public class Role {
     private String name;
 
     @ManyToMany(mappedBy = "roles", fetch = FetchType.EAGER)
-    private Set<Users> ownerId;
-
-    public Role(Long id, String name) {
-        this.id = id;
-        this.name = name;
-        this.ownerId = new HashSet<>();
-    }
+    private Set<Users> ownerId = new HashSet<>();
 }
