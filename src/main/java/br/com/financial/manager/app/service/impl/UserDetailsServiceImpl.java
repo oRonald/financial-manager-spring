@@ -1,4 +1,4 @@
-package br.com.financial.manager.app.service;
+package br.com.financial.manager.app.service.impl;
 
 import br.com.financial.manager.app.infrastructure.repository.postgres.UsersRepository;
 import org.springframework.security.core.userdetails.UserDetails;
