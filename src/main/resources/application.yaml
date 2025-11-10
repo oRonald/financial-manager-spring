@@ -1,0 +1,12 @@
+spring:
+  application:
+  name: app
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${PSQL_FINANCIAL_MANAGER_DB}
+    username: ${PSQL_FINANCIAL_MANAGER_USER}
+    password: ${PSQL_FINANCIAL_MANAGER_PASS}
+
+  data:
+    mongodb:
+      uri: mongodb://${MONGO_FINANCIAL_MANAGER_USER}:@{MONGO_FINANCIAL_MANAGER_PASS}@localhost:27017/financial-manager
