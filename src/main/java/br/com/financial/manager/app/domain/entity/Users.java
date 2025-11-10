@@ -1,20 +1,21 @@
 package br.com.financial.manager.app.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
 
 @Getter
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @NoArgsConstructor
-public class Users {
+public class Users implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,22 +39,11 @@ public class Users {
     private Set<Role> roles;
 
     @OneToMany(mappedBy = "owner")
-    private List<Account> accounts;
+    private List<Account> accounts = new ArrayList<>();
 
-    private Users(Long id, String username, String email, String password) {
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.roles = new HashSet<>();
-        this.accounts = new ArrayList<>();
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + roles.stream().map(Role::getName)));
     }
 
-    public static Users create(Long id, String username, String email, String password){
-        return new Users(id, username, email, password);
-    }
-
-    public static boolean isEmailValid(String email){
-        return email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\.[a-zA-Z]{2,6}$");
-    }
 }
