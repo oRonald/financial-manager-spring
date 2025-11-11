@@ -43,7 +43,7 @@ CREATE TABLE transactions(
     type transaction_type NOT NULL,
 
     account_id BIGINT NOT NULL,
-    category_id BIGINT NOT NULL,
+    category_id BIGINT,
 
     FOREIGN KEY (account_id) REFERENCES accounts(id),
     FOREIGN KEY (category_id) REFERENCES categories(id)
