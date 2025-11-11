@@ -1,7 +1,6 @@
 package br.com.financial.manager.app.exception;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +12,7 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InvalidEmailResponse {
+public class GlobalExceptionResponse {
 
     private String error;
     private String message;
