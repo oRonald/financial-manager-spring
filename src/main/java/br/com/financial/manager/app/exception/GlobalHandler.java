@@ -1,6 +1,5 @@
 package br.com.financial.manager.app.exception;
 
-import com.auth0.jwt.exceptions.JWTCreationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -59,5 +58,41 @@ public class GlobalHandler {
                 .timestamp(Instant.now())
                 .build();
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ResponseEntity<GlobalExceptionResponse> handlingAccountNotFound(AccountNotFoundException ex){
+        GlobalExceptionResponse response = GlobalExceptionResponse
+                .builder()
+                .error("Invalid account")
+                .message(ex.getMessage())
+                .status(HttpStatus.NOT_FOUND.value())
+                .timestamp(Instant.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<GlobalExceptionResponse> handlingInsufficientBalance(InsufficientBalanceException ex){
+        GlobalExceptionResponse response = GlobalExceptionResponse
+                .builder()
+                .error("Insufficient balance")
+                .message(ex.getMessage())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .timestamp(Instant.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(TransactionValueException.class)
+    public ResponseEntity<GlobalExceptionResponse> handlingInvalidTransactionValue(TransactionValueException ex){
+        GlobalExceptionResponse response = GlobalExceptionResponse
+                .builder()
+                .error("Transaction value invalid")
+                .message(ex.getMessage())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .timestamp(Instant.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }
