@@ -2,16 +2,18 @@ package br.com.financial.manager.app.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "categories")
 
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Data
 public class Category {
 
@@ -24,10 +26,4 @@ public class Category {
 
     @OneToMany(mappedBy = "category")
     private List<Transaction> transactions;
-
-    public Category(Long id, String name) {
-        this.id = id;
-        this.name = name;
-        this.transactions = new ArrayList<>();
-    }
 }
