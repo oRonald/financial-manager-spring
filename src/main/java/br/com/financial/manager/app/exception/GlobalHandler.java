@@ -48,4 +48,16 @@ public class GlobalHandler {
                 .build();
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+
+    @ExceptionHandler(AccountNameAlreadyExists.class)
+    public ResponseEntity<GlobalExceptionResponse> handlingAccountNameExists(AccountNameAlreadyExists ex){
+        GlobalExceptionResponse response = GlobalExceptionResponse
+                .builder()
+                .error("Invalid account name")
+                .message(ex.getMessage())
+                .status(HttpStatus.CONFLICT.value())
+                .timestamp(Instant.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
 }
