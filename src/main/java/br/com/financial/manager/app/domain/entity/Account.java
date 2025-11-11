@@ -1,18 +1,17 @@
 package br.com.financial.manager.app.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "accounts")
 
 @NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @Getter
 public class Account {
 
@@ -33,15 +32,4 @@ public class Account {
     @OneToMany(mappedBy = "account")
     private List<Transaction> transactions;
 
-    private Account(Long id, String name, BigDecimal balance, Users owner) {
-        this.id = id;
-        this.name = name;
-        this.balance = balance;
-        this.owner = owner;
-        this.transactions = new ArrayList<>();
-    }
-
-    public static Account create(Long id, String name, BigDecimal balance, Users owner){
-        return new Account(id, name, balance, owner);
-    }
 }
