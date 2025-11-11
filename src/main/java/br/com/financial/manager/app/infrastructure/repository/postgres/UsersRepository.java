@@ -3,9 +3,11 @@ package br.com.financial.manager.app.infrastructure.repository.postgres;
 import br.com.financial.manager.app.domain.entity.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface UsersRepository extends JpaRepository<Users, Long> {
 
     boolean existsByEmail(String email);
 
-    Users findByEmail(String email);
+    Optional<Users> findByEmail(String email);
 }
