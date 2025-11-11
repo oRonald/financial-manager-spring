@@ -1,6 +1,7 @@
 package br.com.financial.manager.app.infrastructure.security.filters;
 
 import br.com.financial.manager.app.domain.entity.Users;
+import br.com.financial.manager.app.exception.UserNotFoundException;
 import br.com.financial.manager.app.infrastructure.repository.postgres.UsersRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -43,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 String username = jwt.getSubject();
                 if(!repository.existsByEmail(username)){
-                    throw new RuntimeException("user not found");
+                    throw new UserNotFoundException("User not found");
                 }
                 Users user = repository.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 

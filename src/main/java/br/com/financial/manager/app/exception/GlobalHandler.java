@@ -25,8 +25,8 @@ public class GlobalHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
-    @ExceptionHandler(JWTCreationException.class)
-    public ResponseEntity<GlobalExceptionResponse> handlingErrorGenerationToken(JWTCreationException e){
+    @ExceptionHandler(TokenGenerationErrorException.class)
+    public ResponseEntity<GlobalExceptionResponse> handlingErrorGenerationToken(TokenGenerationErrorException e){
         GlobalExceptionResponse response = GlobalExceptionResponse
                 .builder()
                 .error("Token error")
@@ -35,5 +35,17 @@ public class GlobalHandler {
                 .timestamp(Instant.now())
                 .build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<GlobalExceptionResponse> handlingUserNotFound(UserNotFoundException ex){
+        GlobalExceptionResponse response = GlobalExceptionResponse
+                .builder()
+                .error("Token subject")
+                .message("User not found")
+                .status(HttpStatus.NOT_FOUND.value())
+                .timestamp(Instant.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 }

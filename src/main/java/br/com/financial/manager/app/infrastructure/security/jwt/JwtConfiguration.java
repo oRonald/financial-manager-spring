@@ -1,6 +1,7 @@
 package br.com.financial.manager.app.infrastructure.security.jwt;
 
 import br.com.financial.manager.app.domain.entity.Users;
+import br.com.financial.manager.app.exception.TokenGenerationErrorException;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
@@ -25,7 +26,7 @@ public class JwtConfiguration {
                     .withExpiresAt(Instant.now().plus(Duration.ofMinutes(15)))
                     .sign(algorithm);
         } catch (JWTCreationException e){
-            throw new RuntimeException("Error generating token");
+            throw new TokenGenerationErrorException("Error generating token");
         }
     }
 }
