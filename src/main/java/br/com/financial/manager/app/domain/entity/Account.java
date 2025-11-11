@@ -32,4 +32,7 @@ public class Account {
     @OneToMany(mappedBy = "account")
     private List<Transaction> transactions;
 
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
+    }
 }
