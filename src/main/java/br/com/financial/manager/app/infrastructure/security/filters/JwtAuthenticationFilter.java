@@ -1,7 +1,7 @@
 package br.com.financial.manager.app.infrastructure.security.filters;
 
 import br.com.financial.manager.app.domain.entity.Users;
-import br.com.financial.manager.app.exception.UserNotFoundException;
+import br.com.financial.manager.app.exception.exceptions.UserNotFoundException;
 import br.com.financial.manager.app.infrastructure.repository.postgres.UsersRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 

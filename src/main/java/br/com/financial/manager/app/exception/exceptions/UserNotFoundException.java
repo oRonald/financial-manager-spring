@@ -1,4 +1,4 @@
-package br.com.financial.manager.app.exception;
+package br.com.financial.manager.app.exception.exceptions;
 
 public class UserNotFoundException extends RuntimeException{
 

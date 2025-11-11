@@ -1,11 +1,10 @@
 package br.com.financial.manager.app.infrastructure.security.jwt;
 
 import br.com.financial.manager.app.domain.entity.Users;
-import br.com.financial.manager.app.exception.TokenGenerationErrorException;
+import br.com.financial.manager.app.exception.exceptions.TokenGenerationErrorException;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

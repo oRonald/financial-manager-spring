@@ -1,5 +1,6 @@
 package br.com.financial.manager.app.exception;
 
+import br.com.financial.manager.app.exception.exceptions.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
