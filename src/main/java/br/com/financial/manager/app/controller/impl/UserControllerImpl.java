@@ -5,7 +5,8 @@ import br.com.financial.manager.app.domain.entity.dto.CreateAccountDTO;
 import br.com.financial.manager.app.domain.entity.dto.LoginResponse;
 import br.com.financial.manager.app.domain.entity.dto.RegisterUserDTO;
 import br.com.financial.manager.app.infrastructure.security.jwt.UsersLoginDTO;
-import br.com.financial.manager.app.service.UsersRegisterService;
+import br.com.financial.manager.app.service.UsersService;
+import br.com.financial.manager.app.service.impl.AuthServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,10 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/users")
 public class UserControllerImpl implements UsersController {
 
-    private final UsersRegisterService service;
+    private final UsersService service;
+    private final AuthServiceImpl authService;
 
-    public UserControllerImpl(UsersRegisterService service) {
+    public UserControllerImpl(UsersService service, AuthServiceImpl authService) {
         this.service = service;
+        this.authService = authService;
     }
 
     @Override
@@ -34,7 +37,7 @@ public class UserControllerImpl implements UsersController {
     @Override
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody UsersLoginDTO dto) {
-        LoginResponse response = service.login(dto);
+        LoginResponse response = authService.login(dto);
         return ResponseEntity.ok(response);
     }
 

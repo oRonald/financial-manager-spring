@@ -4,7 +4,6 @@ import br.com.financial.manager.app.domain.entity.Account;
 import br.com.financial.manager.app.domain.entity.Role;
 import br.com.financial.manager.app.domain.entity.Users;
 import br.com.financial.manager.app.domain.entity.dto.CreateAccountDTO;
-import br.com.financial.manager.app.domain.entity.dto.LoginResponse;
 import br.com.financial.manager.app.domain.entity.dto.RegisterUserDTO;
 import br.com.financial.manager.app.exception.AccountNameAlreadyExists;
 import br.com.financial.manager.app.exception.InvalidEmailException;
@@ -13,16 +12,12 @@ import br.com.financial.manager.app.infrastructure.repository.postgres.AccountRe
 import br.com.financial.manager.app.infrastructure.repository.postgres.RoleRepository;
 import br.com.financial.manager.app.infrastructure.repository.postgres.UsersRepository;
 import br.com.financial.manager.app.infrastructure.security.jwt.JwtConfiguration;
-import br.com.financial.manager.app.infrastructure.security.jwt.UsersLoginDTO;
-import br.com.financial.manager.app.service.UsersRegisterService;
+import br.com.financial.manager.app.service.UsersService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +28,7 @@ import java.util.HashSet;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UsersRegisterServiceImpl implements UsersRegisterService {
+public class UsersServiceImpl implements UsersService {
 
     private final UsersRepository repository;
     private final RoleRepository roleRepository;
@@ -62,19 +57,6 @@ public class UsersRegisterServiceImpl implements UsersRegisterService {
         user.getRoles().add(role);
 
         repository.save(user);
-    }
-
-    @Override
-    public LoginResponse login(UsersLoginDTO dto) {
-        Users user = repository.findByEmail(dto.getEmail()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        if(!encoder.matches(dto.getPassword(), user.getPassword())){
-            throw new BadCredentialsException("Invalid password");
-        }
-
-        var authToken = new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword());
-        var authenticated = manager.authenticate(authToken);
-        String token = jwt.generateToken((Users) authenticated.getPrincipal());
-        return new LoginResponse(token);
     }
 
     @Override
