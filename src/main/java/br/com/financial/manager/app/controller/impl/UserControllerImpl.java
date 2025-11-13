@@ -1,19 +1,14 @@
 package br.com.financial.manager.app.controller.impl;
 
 import br.com.financial.manager.app.controller.UsersController;
-import br.com.financial.manager.app.domain.entity.dto.CreateAccountDTO;
-import br.com.financial.manager.app.domain.entity.dto.LoginResponse;
-import br.com.financial.manager.app.domain.entity.dto.RegisterUserDTO;
+import br.com.financial.manager.app.domain.entity.dto.*;
 import br.com.financial.manager.app.infrastructure.security.jwt.UsersLoginDTO;
 import br.com.financial.manager.app.service.UsersService;
 import br.com.financial.manager.app.service.impl.AuthServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
@@ -32,6 +27,20 @@ public class UserControllerImpl implements UsersController {
     public ResponseEntity<Void> registerUser(@RequestBody RegisterUserDTO dto) {
         service.registerUser(dto);
         return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @Override
+    @PostMapping("/recovery-token")
+    public ResponseEntity<Void> recoveryToken(@RequestBody RecoveryTokenDTO dto) {
+        authService.passwordTokenRecovery(dto);
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+    }
+
+    @Override
+    @PatchMapping("/change-password")
+    public ResponseEntity<Void> changePassword(@RequestBody ChangePasswordDTO dto, @RequestParam String token) {
+        authService.changePassword(dto, token);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @Override

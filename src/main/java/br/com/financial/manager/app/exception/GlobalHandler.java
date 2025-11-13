@@ -96,4 +96,52 @@ public class GlobalHandler {
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
+
+    @ExceptionHandler(TokenUserNotFounDException.class)
+    public ResponseEntity<GlobalExceptionResponse> handlingTokenOrUserNotFound(TokenUserNotFounDException ex){
+        GlobalExceptionResponse response = GlobalExceptionResponse
+                .builder()
+                .error("Recovery Token Error")
+                .message(ex.getMessage())
+                .status(HttpStatus.NOT_FOUND.value())
+                .timestamp(Instant.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(RecoveryTokenExpiredException.class)
+    public ResponseEntity<GlobalExceptionResponse> handlingTokenExpired(RecoveryTokenExpiredException ex){
+        GlobalExceptionResponse response = GlobalExceptionResponse
+                .builder()
+                .error("Token Error")
+                .message(ex.getMessage())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .timestamp(Instant.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    @ExceptionHandler(RecoveryTokenEmailException.class)
+    public ResponseEntity<GlobalExceptionResponse> handlingTokenEmailInvalid(RecoveryTokenEmailException ex){
+        GlobalExceptionResponse response = GlobalExceptionResponse
+                .builder()
+                .error("Token Email Error")
+                .message(ex.getMessage())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .timestamp(Instant.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(InvalidRecoveryTokenException.class)
+    public ResponseEntity<GlobalExceptionResponse> handlingInvalidRecoveryToken(InvalidRecoveryTokenException ex){
+        GlobalExceptionResponse response = GlobalExceptionResponse
+                .builder()
+                .error("Recovery Token Error")
+                .message(ex.getMessage())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .timestamp(Instant.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
 }

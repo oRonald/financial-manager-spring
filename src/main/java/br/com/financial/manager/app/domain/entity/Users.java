@@ -48,4 +48,7 @@ public class Users implements UserDetails {
                 .toList();
     }
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }

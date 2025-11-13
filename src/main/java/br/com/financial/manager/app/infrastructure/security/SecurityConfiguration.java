@@ -28,6 +28,8 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(request -> {
                     request.requestMatchers(HttpMethod.POST, "/users").permitAll();
                     request.requestMatchers(HttpMethod.POST, "/users/login").permitAll();
+                    request.requestMatchers(HttpMethod.POST, "/users/recovery-token").permitAll();
+                    request.requestMatchers(HttpMethod.PATCH, "/users/change-password").permitAll();
                     request.anyRequest().authenticated();
                 })
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
