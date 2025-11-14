@@ -13,4 +13,5 @@ public interface AccountsService {
 
     TransactionResponse makeTransaction(@Valid TransactionEntryDTO dto, String accountName);
     List<TransactionResponse> getTransactionsByAccount(String accountName);
+    void sendStatementReport(String accountName);
 }

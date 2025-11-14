@@ -13,4 +13,5 @@ public interface AccountsController {
 
     ResponseEntity<TransactionResponse> makeTransaction(TransactionEntryDTO dto, String accountName, UriComponentsBuilder builder);
     ResponseEntity<List<TransactionResponse>> accountTransactions(String accountName);
+    ResponseEntity<Void> statementReport(String accountName);
 }

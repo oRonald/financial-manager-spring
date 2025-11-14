@@ -4,15 +4,23 @@ import br.com.financial.manager.app.domain.entity.Account;
 import br.com.financial.manager.app.domain.entity.Category;
 import br.com.financial.manager.app.domain.entity.Transaction;
 import br.com.financial.manager.app.domain.entity.Users;
+import br.com.financial.manager.app.domain.entity.audit.TransactionsAudit;
 import br.com.financial.manager.app.domain.entity.dto.TransactionEntryDTO;
 import br.com.financial.manager.app.domain.entity.enums.TransactionType;
 import br.com.financial.manager.app.domain.entity.dto.TransactionResponse;
 import br.com.financial.manager.app.exception.exceptions.*;
+import br.com.financial.manager.app.infrastructure.config.pdf.DocumentWrapper;
+import br.com.financial.manager.app.infrastructure.config.pdf.PdfFactoryConfig;
+import br.com.financial.manager.app.infrastructure.repository.mongodb.TransactionsAuditRepository;
 import br.com.financial.manager.app.infrastructure.repository.postgres.AccountRepository;
 import br.com.financial.manager.app.infrastructure.repository.postgres.CategoryRepository;
 import br.com.financial.manager.app.infrastructure.repository.postgres.TransactionRepository;
 import br.com.financial.manager.app.infrastructure.repository.postgres.UsersRepository;
 import br.com.financial.manager.app.service.AccountsService;
+import br.com.financial.manager.app.service.EmailService;
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -22,6 +30,7 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +40,9 @@ public class AccountsServiceImpl implements AccountsService {
     private final UsersRepository usersRepository;
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
+    private final PdfFactoryConfig pdfFactoryConfig;
+    private final EmailService emailService;
+    private final TransactionsAuditRepository auditRepository;
 
     @Override
     public TransactionResponse makeTransaction(TransactionEntryDTO dto, String accountName) {
@@ -134,6 +146,62 @@ public class AccountsServiceImpl implements AccountsService {
                 .categoryName(transaction.getCategory() != null ? transaction.getCategory().getName() : "UNCATEGORIZED")
                 .date(transaction.getDate())
                 .build();
+    }
+
+    @Override
+    public void sendStatementReport(String accountName) {
+        Users user = getUser();
+        Account account = repository.findByNameAndOwnerId(accountName, user.getId()).orElseThrow(() -> new AccountNotFoundException("Account not found"));
+
+        try{
+            DocumentWrapper wrapper = pdfFactoryConfig.createDocument();
+            Document doc = wrapper.getDocument();
+
+            Paragraph title = new Paragraph("Financial Statement Report");
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(10f);
+            doc.add(title);
+
+            PdfPTable table = new PdfPTable(6);
+            table.setWidthPercentage(100);
+            table.setSpacingBefore(10f);
+            table.setSpacingAfter(10f);
+            table.setWidths(new float[]{6f, 5f, 5f, 6f, 6f, 6f});
+
+            Stream.of("Description", "Transaction Value", "Date", "Type", "Category",  "Account")
+                    .forEach(header -> {
+                        PdfPCell cell = new PdfPCell(new Paragraph(header));
+                        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                        cell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                        table.addCell(cell);
+                    });
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
+                    .withZone(ZoneId.of("America/Sao_Paulo"));
+
+            for(Transaction t : account.getTransactions()){
+                String formatedDate = formatter.format(t.getDate());
+                table.addCell(new PdfPCell(new Paragraph(t.getDescription().isEmpty() ? "UNKNOWN" : t.getDescription())));
+                table.addCell(new PdfPCell(new Paragraph(String.valueOf(t.getTransactionValue()))));
+                table.addCell(new PdfPCell(new Paragraph(formatedDate)));
+                table.addCell(new PdfPCell(new Paragraph(t.getType().name())));
+                table.addCell(new PdfPCell(new Paragraph(t.getCategory() != null ? t.getCategory().getName() : "UNKNOWN")));
+                table.addCell(new PdfPCell(new Paragraph(t.getAccount().getName())));
+            }
+
+            doc.add(table);
+
+            Paragraph info = new Paragraph("Account owner: " + user.getEmail());
+            info.setAlignment(Element.ALIGN_LEFT);
+
+            doc.add(info);
+
+            byte[] pdfBytes = wrapper.getBytes();
+
+            emailService.sendEmailStatement(pdfBytes, user.getEmail());
+        } catch (DocumentException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Users getUser(){

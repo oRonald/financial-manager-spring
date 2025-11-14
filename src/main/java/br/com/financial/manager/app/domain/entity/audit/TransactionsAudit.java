@@ -2,6 +2,7 @@ package br.com.financial.manager.app.domain.entity.audit;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 
 @Document(collection = "transactionAudit")
 @Getter
+@Setter
 @NoArgsConstructor
 public class TransactionsAudit {
 

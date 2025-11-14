@@ -6,6 +6,7 @@ import br.com.financial.manager.app.domain.entity.dto.TransactionResponse;
 import br.com.financial.manager.app.service.AccountsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -37,5 +38,13 @@ public class AccountsControllerImpl implements AccountsController {
     public ResponseEntity<List<TransactionResponse>> accountTransactions(@RequestParam String accountName) {
         List<TransactionResponse> responses = service.getTransactionsByAccount(accountName);
         return ResponseEntity.ok().body(responses);
+    }
+
+    @Override
+    @PostMapping("/statement-report")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Void> statementReport(@RequestParam String accountName) {
+        service.sendStatementReport(accountName);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
