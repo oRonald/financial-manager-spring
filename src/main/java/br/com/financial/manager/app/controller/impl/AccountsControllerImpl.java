@@ -5,12 +5,15 @@ import br.com.financial.manager.app.domain.entity.dto.TransactionEntryDTO;
 import br.com.financial.manager.app.domain.entity.dto.TransactionResponse;
 import br.com.financial.manager.app.service.AccountsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/accounts")
@@ -26,5 +29,13 @@ public class AccountsControllerImpl implements AccountsController {
         TransactionResponse response = service.makeTransaction(dto, accountName);
         URI uri = builder.path("/{id}").buildAndExpand(response.getAccountId()).toUri();
         return ResponseEntity.created(uri).body(response);
+    }
+
+    @Override
+    @GetMapping
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<List<TransactionResponse>> accountTransactions(@RequestParam String accountName) {
+        List<TransactionResponse> responses = service.getTransactionsByAccount(accountName);
+        return ResponseEntity.ok().body(responses);
     }
 }

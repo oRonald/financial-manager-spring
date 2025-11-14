@@ -18,8 +18,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -106,6 +108,32 @@ public class AccountsServiceImpl implements AccountsService {
 
         transactionRepository.save(transaction);
         return new TransactionResponse(account.getId(), dto.getDescription(), dto.getValue(), transaction.getType(), dto.getCategoryName(), Instant.now());
+    }
+
+    @Override
+    public List<TransactionResponse> getTransactionsByAccount(String accountName) {
+        Users user = getUser();
+        Account account = repository.findByNameAndOwnerId(accountName, user.getId()).orElseThrow(() -> new AccountNotFoundException("Account not found"));
+        List<Transaction> transactions = transactionRepository.findByAccountId(account.getId());
+
+        if(transactions == null){
+            throw new RuntimeException("Transactions not found");
+        }
+
+        return transactions.stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    private TransactionResponse toResponse(Transaction transaction){
+        return TransactionResponse.builder()
+                .accountId(transaction.getAccount().getId())
+                .description(transaction.getDescription())
+                .transactionValue(transaction.getTransactionValue())
+                .type(transaction.getType())
+                .categoryName(transaction.getCategory() != null ? transaction.getCategory().getName() : "UNCATEGORIZED")
+                .date(transaction.getDate())
+                .build();
     }
 
     private Users getUser(){

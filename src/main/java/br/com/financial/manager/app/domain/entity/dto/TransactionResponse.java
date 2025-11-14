@@ -4,6 +4,7 @@ import br.com.financial.manager.app.domain.entity.Category;
 import br.com.financial.manager.app.domain.entity.enums.TransactionType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -11,6 +12,7 @@ import java.time.Instant;
 
 @Data
 @AllArgsConstructor
+@Builder
 public class TransactionResponse {
 
     private Long accountId;
