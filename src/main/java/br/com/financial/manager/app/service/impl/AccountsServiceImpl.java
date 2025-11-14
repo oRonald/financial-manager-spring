@@ -7,11 +7,9 @@ import br.com.financial.manager.app.domain.entity.Users;
 import br.com.financial.manager.app.domain.entity.dto.TransactionEntryDTO;
 import br.com.financial.manager.app.domain.entity.enums.TransactionType;
 import br.com.financial.manager.app.domain.entity.dto.TransactionResponse;
-import br.com.financial.manager.app.exception.exceptions.AccountNotFoundException;
-import br.com.financial.manager.app.exception.exceptions.InsufficientBalanceException;
-import br.com.financial.manager.app.exception.exceptions.TransactionValueException;
-import br.com.financial.manager.app.exception.exceptions.UserNotFoundException;
+import br.com.financial.manager.app.exception.exceptions.*;
 import br.com.financial.manager.app.infrastructure.repository.postgres.AccountRepository;
+import br.com.financial.manager.app.infrastructure.repository.postgres.CategoryRepository;
 import br.com.financial.manager.app.infrastructure.repository.postgres.TransactionRepository;
 import br.com.financial.manager.app.infrastructure.repository.postgres.UsersRepository;
 import br.com.financial.manager.app.service.AccountsService;
@@ -30,18 +28,21 @@ public class AccountsServiceImpl implements AccountsService {
     private final AccountRepository repository;
     private final UsersRepository usersRepository;
     private final TransactionRepository transactionRepository;
+    private final CategoryRepository categoryRepository;
 
     @Override
     public TransactionResponse makeTransaction(TransactionEntryDTO dto, String accountName) {
         Users user = getUser();
         Account account = repository.findByNameAndOwnerId(accountName, user.getId()).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        Category category = null;
 
-        if(!dto.getDescription().isBlank()){
-            category = Category.builder()
-                    .name(dto.getCategoryName())
-                    .transactions(new ArrayList<>())
-                    .build();
+        TransactionType type = fromString(dto.getType());
+
+        if(type == null){
+            throw new TransactionTypeException("Invalid Transaction type value: " + dto.getType());
+        }
+
+        if(type != TransactionType.EXPENSE && type != TransactionType.INCOME){
+            throw new TransactionTypeException("Transaction type must be: EXPENSE or INCOME");
         }
 
         if(dto.getType().equalsIgnoreCase("EXPENSE") && account.getBalance().compareTo(dto.getValue()) < 0){
@@ -58,17 +59,49 @@ public class AccountsServiceImpl implements AccountsService {
             account.setBalance(account.getBalance().add(dto.getValue()));
         }
 
-        Transaction transaction = Transaction.builder()
-                .type(TransactionType.valueOf(dto.getType().toUpperCase()))
-                .description(dto.getDescription())
-                .transactionValue(dto.getValue())
-                .date(Instant.now())
-                .account(account)
-                .category(category)
-                .build();
+        Category category;
+        Transaction transaction;
 
-        if(category != null){
+        if(!dto.getCategoryName().isEmpty() && !categoryRepository.existsByName(dto.getCategoryName())){
+            category = Category.builder()
+                    .name(dto.getCategoryName())
+                    .transactions(new ArrayList<>())
+                    .build();
+
+            transaction = Transaction.builder()
+                    .type(TransactionType.valueOf(dto.getType().toUpperCase()))
+                    .description(dto.getDescription())
+                    .transactionValue(dto.getValue())
+                    .date(Instant.now())
+                    .account(account)
+                    .category(category)
+                    .build();
+
             category.getTransactions().add(transaction);
+        }
+
+        if(!dto.getCategoryName().isEmpty() && categoryRepository.existsByName(dto.getCategoryName())){
+            Category categoryExists = categoryRepository.findByName(dto.getCategoryName());
+
+            transaction = Transaction.builder()
+                    .type(TransactionType.valueOf(dto.getType().toUpperCase()))
+                    .description(dto.getDescription())
+                    .transactionValue(dto.getValue())
+                    .date(Instant.now())
+                    .account(account)
+                    .category(categoryExists)
+                    .build();
+
+            categoryExists.getTransactions().add(transaction);
+        } else {
+            transaction = Transaction.builder()
+                    .type(TransactionType.valueOf(dto.getType().toUpperCase()))
+                    .description(dto.getDescription())
+                    .transactionValue(dto.getValue())
+                    .date(Instant.now())
+                    .account(account)
+                    .category(null)
+                    .build();
         }
 
         transactionRepository.save(transaction);
@@ -77,5 +110,14 @@ public class AccountsServiceImpl implements AccountsService {
 
     private Users getUser(){
         return usersRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+
+    private TransactionType fromString(String type){
+        for(TransactionType t : TransactionType.values()){
+            if(t.name().equals(type)){
+                return t;
+            }
+        }
+        return null;
     }
 }

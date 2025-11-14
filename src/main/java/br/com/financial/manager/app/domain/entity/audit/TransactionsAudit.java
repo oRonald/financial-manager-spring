@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import java.time.Instant;
 import java.time.LocalDate;
 
-@Document(collation = "transaction_audit")
+@Document(collection = "transactionAudit")
 @Getter
 @NoArgsConstructor
 public class TransactionsAudit {

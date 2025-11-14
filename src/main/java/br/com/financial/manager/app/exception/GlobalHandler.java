@@ -144,4 +144,16 @@ public class GlobalHandler {
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
+
+    @ExceptionHandler(TransactionTypeException.class)
+    public ResponseEntity<GlobalExceptionResponse> handlingTransactionTypeException(TransactionTypeException ex){
+        GlobalExceptionResponse response = GlobalExceptionResponse
+                .builder()
+                .error("Transaction Type Invalid")
+                .message(ex.getMessage())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .timestamp(Instant.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
 }
