@@ -118,7 +118,8 @@ public class AccountsServiceImpl implements AccountsService {
                     .build();
         }
 
-        transactionRepository.save(transaction);
+        transaction = transactionRepository.save(transaction);
+        saveTransactionAudit(transaction, user.getId());
         return new TransactionResponse(account.getId(), dto.getDescription(), dto.getValue(), transaction.getType(), dto.getCategoryName(), Instant.now());
     }
 
@@ -202,6 +203,17 @@ public class AccountsServiceImpl implements AccountsService {
         } catch (DocumentException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void saveTransactionAudit(Transaction transaction, Long userId){
+        TransactionsAudit audit = new TransactionsAudit();
+
+        audit.setId(transaction.getId());
+        audit.setUserId(userId);
+        audit.setTransactionTime(transaction.getDate());
+        audit.setPeriodStart(LocalDate.now());
+
+        auditRepository.save(audit);
     }
 
     private Users getUser(){

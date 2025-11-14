@@ -34,8 +34,4 @@ public class TransactionsAudit {
         this.transactionTime = Instant.now();
         this.periodStart = LocalDate.now();
     }
-
-    public static TransactionsAudit create(Long id, Long userId){
-        return new TransactionsAudit(id, userId);
-    }
 }
