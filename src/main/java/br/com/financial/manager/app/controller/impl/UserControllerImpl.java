@@ -3,6 +3,7 @@ package br.com.financial.manager.app.controller.impl;
 import br.com.financial.manager.app.controller.UsersController;
 import br.com.financial.manager.app.domain.entity.dto.*;
 import br.com.financial.manager.app.infrastructure.security.jwt.UsersLoginDTO;
+import br.com.financial.manager.app.service.AuthService;
 import br.com.financial.manager.app.service.UsersService;
 import br.com.financial.manager.app.service.impl.AuthServiceImpl;
 import org.springframework.http.HttpStatus;
@@ -15,9 +16,9 @@ import org.springframework.web.bind.annotation.*;
 public class UserControllerImpl implements UsersController {
 
     private final UsersService service;
-    private final AuthServiceImpl authService;
+    private final AuthService authService;
 
-    public UserControllerImpl(UsersService service, AuthServiceImpl authService) {
+    public UserControllerImpl(UsersService service, AuthService authService) {
         this.service = service;
         this.authService = authService;
     }

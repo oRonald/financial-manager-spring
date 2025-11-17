@@ -10,6 +10,7 @@ import br.com.financial.manager.app.infrastructure.repository.mongodb.TokenRecov
 import br.com.financial.manager.app.infrastructure.repository.postgres.UsersRepository;
 import br.com.financial.manager.app.infrastructure.security.jwt.JwtConfiguration;
 import br.com.financial.manager.app.infrastructure.security.jwt.UsersLoginDTO;
+import br.com.financial.manager.app.service.AuthService;
 import br.com.financial.manager.app.service.EmailService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AuthServiceImpl {
+public class AuthServiceImpl implements AuthService {
 
     private final EmailService emailService;
     private final AuthenticationManager manager;
