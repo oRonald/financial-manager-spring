@@ -9,28 +9,21 @@ import br.com.financial.manager.app.domain.entity.dto.TransactionEntryDTO;
 import br.com.financial.manager.app.domain.entity.enums.TransactionType;
 import br.com.financial.manager.app.domain.entity.dto.TransactionResponse;
 import br.com.financial.manager.app.exception.exceptions.*;
-import br.com.financial.manager.app.infrastructure.config.pdf.DocumentWrapper;
-import br.com.financial.manager.app.infrastructure.config.pdf.PdfFactoryConfig;
+import br.com.financial.manager.app.infrastructure.config.mail.pdfGenerator.GenerateStatementReport;
 import br.com.financial.manager.app.infrastructure.repository.mongodb.TransactionsAuditRepository;
 import br.com.financial.manager.app.infrastructure.repository.postgres.AccountRepository;
 import br.com.financial.manager.app.infrastructure.repository.postgres.CategoryRepository;
 import br.com.financial.manager.app.infrastructure.repository.postgres.TransactionRepository;
 import br.com.financial.manager.app.infrastructure.repository.postgres.UsersRepository;
 import br.com.financial.manager.app.service.AccountsService;
-import br.com.financial.manager.app.service.EmailService;
-import com.itextpdf.text.*;
-import com.itextpdf.text.pdf.PdfPCell;
-import com.itextpdf.text.pdf.PdfPTable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -40,97 +33,71 @@ public class AccountsServiceImpl implements AccountsService {
     private final UsersRepository usersRepository;
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
-    private final PdfFactoryConfig pdfFactoryConfig;
-    private final EmailService emailService;
+    private final GenerateStatementReport generateStatementReport;
     private final TransactionsAuditRepository auditRepository;
 
     @Override
     public TransactionResponse makeTransaction(TransactionEntryDTO dto, String accountName) {
         Users user = getUser();
-        Account account = repository.findByNameAndOwnerId(accountName, user.getId()).orElseThrow(() -> new AccountNotFoundException("Account not found"));
+        Account account = findAccountByUser(accountName, user);
+        TransactionType transactionType = fromString(dto.getType());
 
-        TransactionType type = fromString(dto.getType());
+        isBalanceSufficient(dto, account.getBalance());
+        isTransactionEntryValueValid(dto.getValue());
 
-        if(type == null){
-            throw new TransactionTypeException("Invalid Transaction type value: " + dto.getType());
-        }
-
-        if(type != TransactionType.EXPENSE && type != TransactionType.INCOME){
-            throw new TransactionTypeException("Transaction type must be: EXPENSE or INCOME");
-        }
-
-        if(dto.getType().equalsIgnoreCase("EXPENSE") && account.getBalance().compareTo(dto.getValue()) < 0){
-            throw new InsufficientBalanceException("Insufficient balance");
-        }
-
-        if(dto.getValue().compareTo(BigDecimal.ZERO) <= 0){
-            throw new TransactionValueException("Value must not be equals or below zero");
-        }
-
-        if(dto.getType().equalsIgnoreCase("EXPENSE")){
+        if(transactionType == TransactionType.EXPENSE){
             account.setBalance(account.getBalance().subtract(dto.getValue()));
-        } else {
+        } else if(transactionType == TransactionType.INCOME) {
             account.setBalance(account.getBalance().add(dto.getValue()));
         }
 
-        Category category;
-        Transaction transaction;
+        Category category = null;
+        boolean hasCategory = dto.getCategoryName() != null && !dto.getCategoryName().isEmpty();
 
-        if(!dto.getCategoryName().isEmpty() && !categoryRepository.existsByName(dto.getCategoryName())){
-            category = Category.builder()
-                    .name(dto.getCategoryName())
-                    .transactions(new ArrayList<>())
-                    .build();
+        if(hasCategory){
+            category = categoryRepository.findByName(dto.getCategoryName());
 
-            transaction = Transaction.builder()
-                    .type(TransactionType.valueOf(dto.getType().toUpperCase()))
-                    .description(dto.getDescription())
-                    .transactionValue(dto.getValue())
-                    .date(Instant.now())
-                    .account(account)
-                    .category(category)
-                    .build();
-
-            category.getTransactions().add(transaction);
+            if(category == null){
+                category = Category.builder()
+                        .name(dto.getCategoryName())
+                        .transactions(new ArrayList<>())
+                        .build();
+            }
         }
 
-        if(!dto.getCategoryName().isEmpty() && categoryRepository.existsByName(dto.getCategoryName())){
-            Category categoryExists = categoryRepository.findByName(dto.getCategoryName());
+        Transaction transaction = Transaction.builder()
+                .type(transactionType)
+                .description(dto.getDescription())
+                .transactionValue(dto.getValue())
+                .account(account)
+                .category(category)
+                .date(Instant.now())
+                .build();
 
-            transaction = Transaction.builder()
-                    .type(TransactionType.valueOf(dto.getType().toUpperCase()))
-                    .description(dto.getDescription())
-                    .transactionValue(dto.getValue())
-                    .date(Instant.now())
-                    .account(account)
-                    .category(categoryExists)
-                    .build();
-
-            categoryExists.getTransactions().add(transaction);
-        } else {
-            transaction = Transaction.builder()
-                    .type(TransactionType.valueOf(dto.getType().toUpperCase()))
-                    .description(dto.getDescription())
-                    .transactionValue(dto.getValue())
-                    .date(Instant.now())
-                    .account(account)
-                    .category(null)
-                    .build();
+        if(category != null){
+            category.getTransactions().add(transaction);
         }
 
         transaction = transactionRepository.save(transaction);
         saveTransactionAudit(transaction, user.getId());
-        return new TransactionResponse(account.getId(), dto.getDescription(), dto.getValue(), transaction.getType(), dto.getCategoryName(), Instant.now());
+
+        return new TransactionResponse(
+                account.getId(),
+                dto.getDescription(),
+                dto.getValue(),
+                transaction.getType(),
+                dto.getCategoryName(),
+                Instant.now());
     }
 
     @Override
     public List<TransactionResponse> getTransactionsByAccount(String accountName) {
         Users user = getUser();
-        Account account = repository.findByNameAndOwnerId(accountName, user.getId()).orElseThrow(() -> new AccountNotFoundException("Account not found"));
+        Account account = findAccountByUser(accountName, user);
         List<Transaction> transactions = transactionRepository.findByAccountId(account.getId());
 
-        if(transactions == null){
-            throw new RuntimeException("Transactions not found");
+        if (transactions == null) {
+            throw new IllegalArgumentException("Transactions not found");
         }
 
         return transactions.stream()
@@ -138,71 +105,12 @@ public class AccountsServiceImpl implements AccountsService {
                 .toList();
     }
 
-    private TransactionResponse toResponse(Transaction transaction){
-        return TransactionResponse.builder()
-                .accountId(transaction.getAccount().getId())
-                .description(transaction.getDescription())
-                .transactionValue(transaction.getTransactionValue())
-                .type(transaction.getType())
-                .categoryName(transaction.getCategory() != null ? transaction.getCategory().getName() : "UNCATEGORIZED")
-                .date(transaction.getDate())
-                .build();
-    }
-
     @Override
     public void sendStatementReport(String accountName) {
         Users user = getUser();
-        Account account = repository.findByNameAndOwnerId(accountName, user.getId()).orElseThrow(() -> new AccountNotFoundException("Account not found"));
+        Account account = findAccountByUser(accountName, user);
 
-        try{
-            DocumentWrapper wrapper = pdfFactoryConfig.createDocument();
-            Document doc = wrapper.getDocument();
-
-            Paragraph title = new Paragraph("Financial Statement Report");
-            title.setAlignment(Element.ALIGN_CENTER);
-            title.setSpacingAfter(10f);
-            doc.add(title);
-
-            PdfPTable table = new PdfPTable(6);
-            table.setWidthPercentage(100);
-            table.setSpacingBefore(10f);
-            table.setSpacingAfter(10f);
-            table.setWidths(new float[]{6f, 5f, 5f, 6f, 6f, 6f});
-
-            Stream.of("Description", "Transaction Value", "Date", "Type", "Category",  "Account")
-                    .forEach(header -> {
-                        PdfPCell cell = new PdfPCell(new Paragraph(header));
-                        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                        cell.setBackgroundColor(BaseColor.LIGHT_GRAY);
-                        table.addCell(cell);
-                    });
-
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
-                    .withZone(ZoneId.of("America/Sao_Paulo"));
-
-            for(Transaction t : account.getTransactions()){
-                String formatedDate = formatter.format(t.getDate());
-                table.addCell(new PdfPCell(new Paragraph(t.getDescription().isEmpty() ? "UNKNOWN" : t.getDescription())));
-                table.addCell(new PdfPCell(new Paragraph(String.valueOf(t.getTransactionValue()))));
-                table.addCell(new PdfPCell(new Paragraph(formatedDate)));
-                table.addCell(new PdfPCell(new Paragraph(t.getType().name())));
-                table.addCell(new PdfPCell(new Paragraph(t.getCategory() != null ? t.getCategory().getName() : "UNKNOWN")));
-                table.addCell(new PdfPCell(new Paragraph(t.getAccount().getName())));
-            }
-
-            doc.add(table);
-
-            Paragraph info = new Paragraph("Account owner: " + user.getEmail());
-            info.setAlignment(Element.ALIGN_LEFT);
-
-            doc.add(info);
-
-            byte[] pdfBytes = wrapper.getBytes();
-
-            emailService.sendEmailStatement(pdfBytes, user.getEmail());
-        } catch (DocumentException e) {
-            throw new RuntimeException(e);
-        }
+        generateStatementReport.generateStatement(account);
     }
 
     private void saveTransactionAudit(Transaction transaction, Long userId){
@@ -216,16 +124,58 @@ public class AccountsServiceImpl implements AccountsService {
         auditRepository.save(audit);
     }
 
+    private void isTransactionTypeNull(TransactionType type){
+        if(type == null){
+            throw new TransactionTypeException("Invalid Transaction type value");
+        }
+    }
+
+    private void isTransactionTypeValid(TransactionType type){
+        if(type != TransactionType.EXPENSE && type != TransactionType.INCOME){
+            throw new TransactionTypeException("Transaction type must be EXPENSE or INCOME");
+        }
+    }
+
+    private void isBalanceSufficient(TransactionEntryDTO dto, BigDecimal accountBalance){
+        if(dto.getType().equalsIgnoreCase("EXPENSE") && accountBalance.compareTo(dto.getValue()) < 0){
+            throw new InsufficientBalanceException("Insufficient balance");
+        }
+    }
+
+    private void isTransactionEntryValueValid(BigDecimal transactionEntry){
+        if(transactionEntry.compareTo(BigDecimal.ZERO) <= 0){
+            throw new TransactionValueException("Value must not be equals or below zero");
+        }
+    }
+
+    private Account findAccountByUser(String accountName, Users user){
+        return  repository.findByNameAndOwnerId(accountName, user.getId()).orElseThrow(() -> new AccountNotFoundException("Account not found"));
+    }
+
     private Users getUser(){
         return usersRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName()).orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 
     private TransactionType fromString(String type){
+        isTransactionTypeNull(TransactionType.valueOf(type));
+        isTransactionTypeValid(TransactionType.valueOf(type));
+
         for(TransactionType t : TransactionType.values()){
             if(t.name().equals(type)){
                 return t;
             }
         }
         return null;
+    }
+
+    private TransactionResponse toResponse(Transaction transaction){
+        return TransactionResponse.builder()
+                .accountId(transaction.getAccount().getId())
+                .description(transaction.getDescription())
+                .transactionValue(transaction.getTransactionValue())
+                .type(transaction.getType())
+                .categoryName(transaction.getCategory() != null ? transaction.getCategory().getName() : "No Category")
+                .date(transaction.getDate())
+                .build();
     }
 }
