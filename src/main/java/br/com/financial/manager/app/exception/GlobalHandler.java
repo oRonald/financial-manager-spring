@@ -4,6 +4,7 @@ import br.com.financial.manager.app.exception.exceptions.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -155,5 +156,17 @@ public class GlobalHandler {
                 .timestamp(Instant.now())
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(PdfGenerateException.class)
+    public ResponseEntity<GlobalExceptionResponse> handlingPdfGenerateException(PdfGenerateException ex){
+        GlobalExceptionResponse response = GlobalExceptionResponse
+                .builder()
+                .error("PDF generate error")
+                .message(ex.getMessage())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .timestamp(Instant.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }
