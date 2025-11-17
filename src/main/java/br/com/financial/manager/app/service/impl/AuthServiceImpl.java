@@ -45,10 +45,8 @@ public class AuthServiceImpl {
      }
 
      public void passwordTokenRecovery(@Valid RecoveryTokenDTO dto){
-        Users user = repository.findByEmail(dto.getEmail()).orElseThrow(() -> new UserNotFoundException("User not found"));
-
+        Users user = findUserByEmail(dto.getEmail());
         tokenRepository.deleteAllByUserEmailAndIsUsedFalse(user.getEmail());
-
         String tokenValue = UUID.randomUUID().toString();
 
         TokenRecovery recovery = new TokenRecovery();
@@ -69,12 +67,15 @@ public class AuthServiceImpl {
             throw new RecoveryTokenExpiredException("Token already used");
         }
 
-        Users user = repository.findByEmail(token.getUserEmail()).orElseThrow(() -> new RecoveryTokenEmailException("User not found"));
-
+        Users user = findUserByEmail(token.getUserEmail());
         user.setPassword(encoder.encode(dto.getNewPassword()));
         token.setUsed(true);
 
         repository.save(user);
         tokenRepository.save(token);
+     }
+
+     private Users findUserByEmail(String email){
+        return repository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found"));
      }
 }
