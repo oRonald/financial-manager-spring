@@ -25,4 +25,9 @@ public class Role {
 
     @ManyToMany(mappedBy = "roles", fetch = FetchType.EAGER)
     private Set<Users> ownerId = new HashSet<>();
+
+    public Role(String name, Set<Users> ownerId) {
+        this.name = name;
+        this.ownerId = ownerId;
+    }
 }
