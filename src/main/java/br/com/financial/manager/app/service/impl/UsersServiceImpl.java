@@ -34,8 +34,6 @@ public class UsersServiceImpl implements UsersService {
     private final RoleRepository roleRepository;
     private final AccountRepository accountRepository;
     private final PasswordEncoder encoder;
-    private final AuthenticationManager manager;
-    private final JwtConfiguration jwt;
 
     @Override
     @Transactional
