@@ -27,9 +27,3 @@ Permite que o usuário administre suas finanças com EXPENSE (despesa) e INCOME 
 - PostgreSQL
 - MongoDB
 - Docker / Docker Compose
-
-## Como utilizar?
-
-<p>A aplicação possui o docker-compose de todos os componentes, sendo necessário apenas baixar este repositório.</p>
-<p>Após baixar os arquivos do repositório, abrir em sua IDE favorita, use este comando no terminal:</p> <strong>docker-compose up --build</strong> <br> <br>
-e acessar por essa URL: <br> <br> <strong>http://localhost:8080/swagger-ui/index.html#/</strong>
