@@ -1,0 +1,26 @@
+spring:
+  application:
+  name: app
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: apiauthentication25@gmail.com
+    password: ${API_AUTH}
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/${PSQL_FINANCIAL_MANAGER_DB}
+    username: ${PSQL_FINANCIAL_MANAGER_USER}
+    password: ${PSQL_FINANCIAL_MANAGER_PASS}
+
+  data:
+    mongodb:
+      uri: mongodb://${MONGO_FINANCIAL_MANAGER_USER}:${MONGO_FINANCIAL_MANAGER_PASS}@mongodb:27017/financial-manager?authSource=admin
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+api:
+  token:
+    secret: ${TOKEN_SECRET}
