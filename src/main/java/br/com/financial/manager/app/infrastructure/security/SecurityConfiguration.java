@@ -21,6 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter filter;
+    private static final String[] SWAGGER = { "/swagger-ui/**", "/v3/api-docs/**" };
 
     @Bean
     public SecurityFilterChain securityConfig(HttpSecurity http) throws Exception{
@@ -30,6 +31,7 @@ public class SecurityConfiguration {
                     request.requestMatchers(HttpMethod.POST, "/users/login").permitAll();
                     request.requestMatchers(HttpMethod.POST, "/users/recovery-token").permitAll();
                     request.requestMatchers(HttpMethod.PATCH, "/users/change-password").permitAll();
+                    request.requestMatchers(HttpMethod.GET, SWAGGER).permitAll();
                     request.anyRequest().authenticated();
                 })
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
