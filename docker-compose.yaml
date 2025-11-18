@@ -1,0 +1,48 @@
+networks:
+  financial-manager-network:
+    driver: bridge
+
+services:
+  app:
+    build: .
+    image: financial-manager-app:latest
+    container_name: backend-financial-manager
+    ports:
+      - "8080:8080"
+    networks:
+      - financial-manager-network
+    depends_on:
+      - postgres
+      - mongodb
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PSQL_FINANCIAL_MANAGER_DB}
+      SPRING_DATASOURCE_USERNAME: ${PSQL_FINANCIAL_MANAGER_USER}
+      SPRING_DATASOURCE_PASSWORD: ${PSQL_FINANCIAL_MANAGER_PASS}
+      API_TOKEN_SECRET: ${TOKEN_SECRET}
+      SPRING_MAIL_PASSWORD: ${API_AUTH}
+        
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_FINANCIAL_MANAGER_USER}:${MONGO_FINANCIAL_MANAGER_PASS}@mongodb:27017/financial-manager?authSource=admin
+    
+  postgres:
+    image: postgres:17
+    container_name: postgres-financial-manager
+    environment:
+      POSTGRES_USER: ${PSQL_FINANCIAL_MANAGER_USER}
+      POSTGRES_PASSWORD: ${PSQL_FINANCIAL_MANAGER_PASS}
+      POSTGRES_DB: financial_manager_db
+    ports:
+      - "5432:5432"
+    networks:
+      - financial-manager-network
+    
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb-financial-manager
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_FINANCIAL_MANAGER_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_FINANCIAL_MANAGER_PASS}
+      MONGO_INITDB_DATABASE: financial-manager
+    ports:
+      - "27017:27017"
+    networks:
+      - financial-manager-network
