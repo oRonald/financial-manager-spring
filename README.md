@@ -3,7 +3,7 @@
   <img width="50" height="50" alt="logo" src="https://github.com/user-attachments/assets/28b6f7ee-883f-445f-9d40-550650734044" />
 </h1>
 
-<p>Sistema desenvolvido em Spring Boot com Arquitetura de Camadas.</p>
+<p>Sistema desenvolvido em Spring Boot com Arquitetura de Camadas para praticar Spring Security com autenticação e autorização.</p>
 Permite que o usuário administre suas finanças com EXPENSE (despesa) e INCOME (renda), com geração de um relatório pessoal em PDF enviador por email.
 <p>Também desenvolvi um sistema de trocar senha com base em um token enviado via email para validação</p>
 
